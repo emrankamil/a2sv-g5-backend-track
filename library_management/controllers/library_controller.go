@@ -5,6 +5,7 @@ import (
     "library_management/models"
     "library_management/services"
     "os"
+	"bufio"
 )
 
 func Console() {
@@ -15,6 +16,8 @@ func Console() {
     library.AddBook(models.Book{ID: 2, Title: "To Kill a Mockingbird", Author: "Harper Lee", Status: "Available"})
     library.AddMember(models.Member{ID: 1, Name: "Emran "})
     library.AddMember(models.Member{ID: 2, Name: "Kamil"})
+
+	reader := bufio.NewReader(os.Stdin)
 
     for {
         fmt.Println("\nLibrary Management System: For better user experience, increase your console height.")
@@ -37,9 +40,9 @@ func Console() {
             fmt.Print("Enter book ID: ")
             fmt.Scan(&id)
             fmt.Print("Enter book title: ")
-            fmt.Scan(&title)
+			title, _ = reader.ReadString('\n')
             fmt.Print("Enter book author: ")
-            fmt.Scan(&author)
+			author, _ = reader.ReadString('\n')
 
 			fmt.Println("\n Result: ")
             addbook:= library.AddBook(models.Book{ID: id, Title: title, Author: author, Status: "Available"})
@@ -90,15 +93,20 @@ func Console() {
         case 5:
             available_books := library.ListAvailableBooks()
 			fmt.Println("\n Available books: ")
-			fmt.Println(available_books)
-
+			for id, book := range available_books {
+				fmt.Printf("ID: %d\nTitle: %s\nAuthor: %s\nStatus: %s\n", id, book.Title, book.Author, book.Status)
+			}
+        
         case 6:
             var memberID int
             fmt.Print("Enter member ID: ")
             fmt.Scan(&memberID)
 			fmt.Println("\n Result: ")
-            err := library.ListBorrowedBooks(memberID)
-            fmt.Println(err)
+            books := library.ListBorrowedBooks(memberID)
+			for id, book := range books {
+				fmt.Printf("ID: %d\nTitle: %s\nAuthor: %s\nStatus: %s\n\n", id, book.Title, book.Author, book.Status)
+			}
+            
 
         case 7:
             fmt.Println("Exiting...")
