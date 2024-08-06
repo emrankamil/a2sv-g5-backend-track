@@ -1,6 +1,6 @@
 package models
 
-type student struct {
+type Member struct {
 	ID    int
 	Name  string
 	BorrowedBooks []Book

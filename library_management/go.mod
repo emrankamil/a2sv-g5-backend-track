@@ -1,2 +1,3 @@
-go 1.22.5
+module library_management
 
+go 1.22.5
