@@ -1,19 +1,34 @@
 package data
 
 import (
+	"context"
 	"errors"
+	"log"
 	"task_manager/models"
 	"time"
-	"context"
 
 	"go.mongodb.org/mongo-driver/bson"
 	"go.mongodb.org/mongo-driver/bson/primitive"
 	"go.mongodb.org/mongo-driver/mongo"
+	"go.mongodb.org/mongo-driver/mongo/options"
 )
 
 var collection *mongo.Collection
 
-func SetUpDB(client *mongo.Client){
+func SetUpDB(){
+	clientOptions := options.Client().ApplyURI("mongodb://localhost:27017")
+
+	// Connect to MongoDB
+	client, err := mongo.Connect(context.TODO(), clientOptions)
+
+	if err != nil {
+		log.Fatal(err)
+	}
+	err = client.Ping(context.TODO(), nil)
+
+	if err != nil {
+		log.Fatal(err)
+	}
 	collection = client.Database("taskmanager").Collection("tasks")
 }
 

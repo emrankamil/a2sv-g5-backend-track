@@ -1,22 +1,97 @@
-
 # Task Management API Documentation
 
-## Get Tasks
+## Introduction
+
+This API allows for the management of tasks, including creating, reading, updating, and deleting tasks. The data is stored in a MongoDB database.
+
+## Prerequisites
+
+Before running the API, ensure that you have the following installed:
+
+- [Go](https://golang.org/doc/install)
+- [MongoDB](https://www.mongodb.com/try/download/community) (either locally or via a cloud provider like [MongoDB Atlas](https://www.mongodb.com/cloud/atlas))
+- [Gin Web Framework](https://github.com/gin-gonic/gin) (can be installed via `go get`)
+
+## MongoDB Configuration
+
+### 1. **Install MongoDB**
+
+If you haven't installed MongoDB yet, follow the [installation guide](https://docs.mongodb.com/manual/installation/) for your operating system.
+
+### 2. **Start MongoDB Server**
+
+If you’re running MongoDB locally, start the MongoDB server by executing:
+
+```sh
+mongod
+```
+
+### 3. **Connecting to MongoDB**
+
+The API connects to a MongoDB database. You can configure the connection string for MongoDB in your application code or environment variables.
+
+- **Connection String Example**:
+  
+  ```sh
+  mongodb://localhost:27017
+  ```
+
+- **Set Up MongoDB Database and Collection**:
+  
+  The application uses a database named `taskmanager` and a collection named `tasks`. These will be created automatically if they do not exist when the API is started.
+
+
+## Setup and Running the API
+
+### 1. **Clone the Repository**
+
+```sh
+git clone github.com/emrankamil/a2sv-g5-backend-track/tree/main/task_manager.git
+cd task_manager
+```
+
+### 2. **Install Dependencies**
+
+```sh
+go mod tidy
+```
+
+### 3. **Set Up MongoDB Connection**
+
+Edit the `data/task_service.go` file or set the `MONGODB_URI` environment variable to specify your MongoDB connection string.
+
+Example of connecting to MongoDB in `main.go`:
+
+```go
+clientOptions := options.Client().ApplyURI("mongodb://localhost:27017")
+client, err := mongo.Connect(context.TODO(), clientOptions)
+if err != nil {log.Fatal(err)}
+if client.Ping(context.TODO(), nil); err != nil {
+  log.Fatal(err)
+}
+collection = client.Database("taskmanager").Collection("tasks")
+```
+
+### 4. **Run the API**
+
+```sh
+go run main.go
+```
+
+## API Endpoints
+
+### Get Tasks
 
 **Endpoint**: `GET /tasks`
 
-This endpoint is used to retrieve a list of tasks.
-
-### Request
-
-- **Query Parameters**: No query parameters required.
+This endpoint retrieves a list of tasks.
 
 ### Response
 
 - **Status Code**: `200 OK`
 - **Content Type**: `application/json`
 - **Response Body**:
-  
+
   ```json
   [
       {
@@ -29,26 +104,15 @@ This endpoint is used to retrieve a list of tasks.
   ]
   ```
 
-Each task object includes the following attributes:
-
-- `id` (string): The unique identifier for the task.
-- `title` (string): The title of the task.
-- `description` (string): The description of the task.
-- `due_date` (string): The due date of the task.
-- `status` (string): The status of the task.
-
----
-
-## Retrieve Task Details
+### Retrieve Task Details
 
 **Endpoint**: `GET /tasks/:id`
 
-This endpoint is used to retrieve details of a specific task identified by its ID.
+This endpoint retrieves details of a specific task identified by its ID.
 
 ### Request
 
 - **URL Parameters**: `id` (string) - The ID of the task to retrieve.
-- **Request Body**: This is a `GET` request and does not require a request body.
 
 ### Response
 
@@ -66,7 +130,7 @@ This endpoint is used to retrieve details of a specific task identified by its I
   }
   ```
 
-In case the requested task is not found, the response will have:
+If the task is not found:
 
 - **Status Code**: `404 Not Found`
 - **Content Type**: `application/json`
@@ -74,17 +138,15 @@ In case the requested task is not found, the response will have:
 
   ```json
   {
-      "error": "string"
+      "error": "Task not found"
   }
   ```
 
----
-
-## Create a Task
+### Create a Task
 
 **Endpoint**: `POST /tasks`
 
-This endpoint is used to create a new task.
+This endpoint creates a new task.
 
 ### Request
 
@@ -100,13 +162,6 @@ This endpoint is used to create a new task.
   }
   ```
 
-The request body requires the following parameters:
-
-- `title` (string, required): The title of the task.
-- `description` (string, required): The description of the task.
-- `due_date` (string, required): The due date of the task.
-- `status` (string, required): The status of the task.
-
 ### Response
 
 - **Status Code**: `201 Created`
@@ -119,13 +174,11 @@ The request body requires the following parameters:
   }
   ```
 
----
-
-## Update Task
+### Update Task
 
 **Endpoint**: `PUT /tasks/:id`
 
-This endpoint is used to update a specific task by providing the task ID in the URL.
+This endpoint updates a specific task by its ID.
 
 ### Request
 
@@ -143,13 +196,6 @@ This endpoint is used to update a specific task by providing the task ID in the 
   }
   ```
 
-The request requires a JSON object in the body with the following parameters:
-
-- `title` (string): The title of the task.
-- `description` (string): The description of the task.
-- `due_date` (string): The due date of the task.
-- `status` (string): The status of the task.
-
 ### Response
 
 - **Status Code**: `200 OK`
@@ -162,13 +208,11 @@ The request requires a JSON object in the body with the following parameters:
   }
   ```
 
----
-
-## Delete Task
+### Delete Task
 
 **Endpoint**: `DELETE /tasks/:id`
 
-This endpoint is used to delete a specific task identified by its ID.
+This endpoint deletes a specific task by its ID.
 
 ### Request
 
@@ -185,38 +229,3 @@ This endpoint is used to delete a specific task identified by its ID.
       "message": "Task deleted successfully"
   }
   ```
-
----
-
-This Markdown documentation should now be more clear and readable for developers to use with your Task Management API.
-
-## Running the API
-
-### Run the server:
-```sh
-go run main.go
-```
-
-### Use Postman to test each endpoint:
-
-- **GET** `/tasks`
-- **GET** `/tasks/:id`
-- **POST** `/tasks` with JSON body:
-  ```json
-  {
-    "title": "Task 1",
-    "description": "Description 1",
-    "due_date": "2024-12-31",
-    "status": "pending"
-  }
-  ```
-- **PUT** `/tasks/:id` with JSON body:
-  ```json
-  {
-    "title": "Updated Task",
-    "description": "Updated Description",
-    "due_date": "2024-12-31",
-    "status": "completed"
-  }
-  ```
-- **DELETE** `/tasks/:id`
