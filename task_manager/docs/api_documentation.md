@@ -1,8 +1,4 @@
 # Task Management API Documentation
-## Postman Doc Link: 
-```sh
-https://documenter.getpostman.com/view/33094138/2sA3rzKsYi
-```
 ## Introduction
 
 This API allows for the management of tasks, including creating, reading, updating, and deleting tasks. The data is stored in a MongoDB database.
