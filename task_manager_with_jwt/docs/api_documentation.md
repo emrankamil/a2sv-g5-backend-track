@@ -1,5 +1,8 @@
 # Task Management API Documentation
-
+## Postman doc Link: 
+```sh
+https://documenter.getpostman.com/view/33094138/2sA3s4kVvY
+```
 ## Overview
 The Task Management API provides endpoints for managing tasks with built-in authentication and authorization using JSON Web Tokens (JWT). The API supports user registration, login, and role-based access control, allowing only authenticated users to access certain endpoints. Admin users have additional privileges, such as the ability to create, update, and delete tasks, and promote other users to the admin role.
 
