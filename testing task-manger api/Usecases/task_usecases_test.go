@@ -5,7 +5,7 @@ import (
 	"errors"
 	"testing"
 	domain "testing_task-manager_api/Domain"
-	"testing_task-manager_api/mocks"
+	"testing_task-manager_api/Domain/mocks"
 
 	"github.com/stretchr/testify/mock"
 	"github.com/stretchr/testify/suite"
@@ -59,7 +59,7 @@ func (suite *taskUsecaseSuite) TestCreateTask_EmptyFields_Positive(){
 
 // Test FetchAll - Positive case
 func (suite *taskUsecaseSuite) TestFetchAll_Positive() {
-	tasks := []domain.Task{
+	tasks := &[]domain.Task{
 		{
 			Title:       "Task 1",
 			Description: "Description 1",
@@ -78,23 +78,23 @@ func (suite *taskUsecaseSuite) TestFetchAll_Positive() {
 
 	// Assertions
 	suite.NoError(err)
-	suite.Equal(len(tasks), len(result))
+	suite.Equal(len(*tasks), len(*result))
 	suite.repository.AssertExpectations(suite.T())
 }
 
 // Test FetchByTaskID - Positive case
 func (suite *taskUsecaseSuite) TestFetchByTaskID_Positive() {
 	taskID := primitive.NewObjectID()
-    task := domain.Task{
+    task := &domain.Task{
 		ID: taskID,
         Title:       "new title",
         Description: "New description",
         Status:      "Pending",
     }
 
-    suite.repository.On("Create", mock.Anything, &task).Return(nil)
+    suite.repository.On("Create", mock.Anything, task).Return(nil)
 
-    err := suite.usecase.Create(context.TODO(), &task)
+    err := suite.usecase.Create(context.TODO(), task)
 
     // Assertions to make sure our operation does the right thing
     suite.Nil(err, "task created successfully")
@@ -117,7 +117,7 @@ func (suite *taskUsecaseSuite) TestFetchByTaskID_Positive() {
 func (suite *taskUsecaseSuite) TestFetchByTaskID_TaskNotFound() {
 	taskID := primitive.NewObjectID().Hex()
 
-	suite.repository.On("FetchByTaskID", mock.Anything, taskID).Return(domain.Task{}, errors.New("task not found"))
+	suite.repository.On("FetchByTaskID", mock.Anything, taskID).Return(&domain.Task{}, errors.New("task not found"))
 
 	_, err := suite.usecase.FetchByTaskID(context.TODO(), taskID)
 
@@ -207,7 +207,7 @@ func (suite *taskUsecaseSuite) TestDelete_Positive() {
 	suite.NoError(err)
 	suite.repository.AssertExpectations(suite.T())
 
-	suite.repository.On("FetchByTaskID", mock.Anything, taskID.Hex()).Return(domain.Task{}, errors.New("task not found"))
+	suite.repository.On("FetchByTaskID", mock.Anything, taskID.Hex()).Return(&domain.Task{}, errors.New("task not found"))
 
 	_, err = suite.usecase.FetchByTaskID(context.TODO(), taskID.Hex())
 

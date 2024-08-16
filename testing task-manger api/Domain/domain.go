@@ -4,6 +4,7 @@ import (
 	"context"
 	"time"
 
+	"github.com/gin-gonic/gin"
 	"go.mongodb.org/mongo-driver/bson/primitive"
 )
 
@@ -25,7 +26,7 @@ type User struct{
 	ID				primitive.ObjectID		`bson:"_id"`
 	Name		    *string			`json:"name" validate:"required,min=2,max=100"`
 	Username		*string			`json:"username" validate:"required,min=2,max=100"`
-	Password		*string			`json:"Password" validate:"required,min=6"`
+	Password		*string			`json:"password" validate:"required,min=6"`
 	Email			*string			`json:"email" validate:"email,required"`
 	User_type		string			`json:"user_type"`
 	Created_at		time.Time		`json:"created_at"`
@@ -43,8 +44,8 @@ type Config struct {
 
 type TaskRepository interface {
 	Create(c context.Context, task *Task) error
-	FetchAll(c context.Context) ([]Task, error)
-	FetchByTaskID(c context.Context, taskID string) (Task, error)
+	FetchAll(c context.Context) (*[]Task, error)
+	FetchByTaskID(c context.Context, taskID string) (*Task, error)
 	Update(c context.Context, taskID string, updatedTask Task) error
 	Delete(c context.Context, taskID string) error
 }
@@ -57,8 +58,8 @@ type UserRepository interface {
 
 type TaskUsecase interface {
 	Create(c context.Context, task *Task) error
-	FetchAll(c context.Context) ([]Task, error)
-	FetchByTaskID(c context.Context, taskID string) (Task, error)
+	FetchAll(c context.Context) (*[]Task, error)
+	FetchByTaskID(c context.Context, taskID string) (*Task, error)
 	Update(c context.Context, taskID string, updatedTask Task) error
 	Delete(c context.Context, taskID string) error
 }
@@ -69,10 +70,25 @@ type UserUsecase interface {
 	Update(c context.Context, userID string) error
 }
 
+type TaskController interface{
+	Create(c *gin.Context)
+	FetchAll(c *gin.Context)
+	FetchByTaskID(c *gin.Context)
+	Update(c *gin.Context)
+	Delete(c *gin.Context)
+}
+
+type UserController interface{
+	Signup(c *gin.Context)
+	Login(c *gin.Context)
+	PromoteUser(c *gin.Context)
+}
 type ErrorResponse struct {
 	Message string `json:"message"`
 }
 
 type SuccessResponse struct {
+	Success bool `json:"success"`
 	Message string `json:"message"`
+	Data interface{} `json:"data"`
 }

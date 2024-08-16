@@ -24,13 +24,13 @@ func (tu *taskUsecase) Create(c context.Context, task *domain.Task) error {
 	return tu.taskRepository.Create(ctx, task)
 }
 
-func (tu *taskUsecase) FetchAll(c context.Context) ([]domain.Task, error) {
+func (tu *taskUsecase) FetchAll(c context.Context) (*[]domain.Task, error) {
 	ctx, cancel := context.WithTimeout(c, tu.contextTimeout)
 	defer cancel()
 	return tu.taskRepository.FetchAll(ctx)
 }
 
-func (tu *taskUsecase) FetchByTaskID(c context.Context, taskID string) (domain.Task, error) {
+func (tu *taskUsecase) FetchByTaskID(c context.Context, taskID string) (*domain.Task, error) {
 	ctx, cancel := context.WithTimeout(c, tu.contextTimeout)
 	defer cancel()
 	return tu.taskRepository.FetchByTaskID(ctx, taskID)

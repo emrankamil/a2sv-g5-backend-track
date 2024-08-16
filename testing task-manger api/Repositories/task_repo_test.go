@@ -61,8 +61,8 @@ func (suite *taskRepositorySuite) TestCreateTask_EmptyFields_Positive(){
 func (suite *taskRepositorySuite) TestGetAllTasks_EmptySlice_Positive() {
 	tasks, err := suite.repository.FetchAll(context.TODO())
 	suite.NoError(err, "no error when get all tasks when the table is empty")
-	suite.Equal(len(tasks), 0, "length of tasks should be 0, since it is empty slice")
-	suite.Equal(tasks, []domain.Task(nil), "tasks is an empty slice")
+	suite.Equal(len(*tasks), 0, "length of tasks should be 0, since it is empty slice")
+	suite.Equal(tasks, &[]domain.Task{}, "tasks is an empty slice")
 }
 
 func (suite *taskRepositorySuite) TestGetAllTasks_FilledRecords_Positive() {
@@ -82,7 +82,7 @@ func (suite *taskRepositorySuite) TestGetAllTasks_FilledRecords_Positive() {
 
 	tasks, err := suite.repository.FetchAll(context.TODO())
 	suite.NoError(err, "no error when get all tasks when the table is empty")
-	suite.Equal(len(tasks), 3, "insert 3 records before get all data, so it should contain three tasks")
+	suite.Equal(len(*tasks), 3, "insert 3 records before get all data, so it should contain three tasks")
 }
 
 // FetchByTaskID test

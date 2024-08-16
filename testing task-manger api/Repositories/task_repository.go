@@ -36,47 +36,47 @@ func (tr *taskRepository) Create(c context.Context, task *domain.Task) error {
 	return err
 }
 
-func (tr *taskRepository) FetchAll(c context.Context) ([]domain.Task, error) {
+func (tr *taskRepository) FetchAll(c context.Context) (*[]domain.Task, error) {
 	var tasks []domain.Task
 	taskCollection := tr.database.Collection(tr.collection)
 
 	cur, err := taskCollection.Find(c, bson.D{{}})
 	if err != nil {
-		return []domain.Task{}, err
+		return &[]domain.Task{}, err
 	}
 
 	for cur.Next(c) {
-		var task domain.Task
+		var task *domain.Task
 
 		val := cur.Decode(&task)
 		if val != nil {
-			return []domain.Task{}, val
+			return &[]domain.Task{}, val
 		}
 
-		tasks = append(tasks, task)
+		tasks = append(tasks, *task)
 	}
 
 	if err := cur.Err(); err != nil {
-		return []domain.Task{}, err
+		return &[]domain.Task{}, err
 	}
 
 	cur.Close(c)
-	return tasks, nil
+	return &tasks, nil
 }
 
-func (tr *taskRepository) FetchByTaskID(c context.Context, taskID string) (domain.Task, error) {
-	var task domain.Task
+func (tr *taskRepository) FetchByTaskID(c context.Context, taskID string) (*domain.Task, error) {
+	var task *domain.Task
 	taskCollection := tr.database.Collection(tr.collection)
 	objID, err := primitive.ObjectIDFromHex(taskID)
 
 	if err != nil {
-        return domain.Task{}, err
+        return &domain.Task{}, err
     }
 
 	filter := bson.D{{Key: "_id", Value: objID}}
 	result := taskCollection.FindOne(c, filter).Decode(&task)
 	if result != nil {
-		return domain.Task{}, result
+		return &domain.Task{}, result
 	}
 	return task, result
 }

@@ -1,6 +1,7 @@
 package controllers
 
 import (
+	"fmt"
 	"net/http"
 	domain "testing_task-manager_api/Domain"
 
@@ -15,6 +16,17 @@ type UserController struct {
 	UserUsecase domain.UserUsecase
 }
 
+func NewTaskController(taskUsecase domain.TaskUsecase) domain.TaskController {
+	return &TaskController{
+		TaskUsecase: taskUsecase,
+	}
+}
+
+func NewUserController(userUsecase domain.UserUsecase) domain.UserController {
+	return &UserController{
+		UserUsecase: userUsecase,
+	}
+}
 //user controllers
 func (uc *UserController) Signup(c *gin.Context){
 	var user domain.User
@@ -29,8 +41,8 @@ func (uc *UserController) Signup(c *gin.Context){
 		c.JSON(http.StatusBadRequest, domain.ErrorResponse{Message: result.Error()})
 		return
 	}
-	c.JSON(http.StatusOK, domain.SuccessResponse{
-		Message: "user registered successfully",
+	c.JSON(http.StatusCreated, domain.SuccessResponse{
+		Message: "User registered successfully",
 	})
 }
 
@@ -76,7 +88,8 @@ func (tc *TaskController) Create(c *gin.Context){
 		return
 	}
 
-	c.JSON(http.StatusOK, domain.SuccessResponse{
+	c.JSON(http.StatusCreated, domain.SuccessResponse{
+		Success: true,
 		Message: "Task created successfully",
 	})
 }
@@ -88,19 +101,27 @@ func (u *TaskController) FetchAll(c *gin.Context) {
 		return
 	}
 
-	c.JSON(http.StatusOK, tasks)
+	c.JSON(http.StatusOK, domain.SuccessResponse{
+		Success: true,
+		Message: "Success to get all tasks",
+		Data: tasks,
+	})
 }
 
 func (u *TaskController) FetchByTaskID(c *gin.Context) {
 	taskID := c.Param("id")
 
-	tasks, err := u.TaskUsecase.FetchByTaskID(c, taskID)
+	task, err := u.TaskUsecase.FetchByTaskID(c, taskID)
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, domain.ErrorResponse{Message: err.Error()})
 		return
 	}
 
-	c.JSON(http.StatusOK, tasks)
+	c.JSON(http.StatusOK, domain.SuccessResponse{
+		Success: true,
+		Message:fmt.Sprintf("Success to get task with id %v", taskID),
+		Data: task,
+	})
 }
 
 func (u *TaskController) Update(c *gin.Context) {

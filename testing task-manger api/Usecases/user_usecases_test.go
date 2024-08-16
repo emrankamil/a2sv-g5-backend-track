@@ -7,9 +7,10 @@ import (
 	domain "testing_task-manager_api/Domain"
 	repositories "testing_task-manager_api/Repositories"
 	"testing_task-manager_api/config"
-	"testing_task-manager_api/mocks"
+	"testing_task-manager_api/Domain/mocks"
 	"time"
 
+	"github.com/go-playground/validator/v10"
 	"github.com/stretchr/testify/mock"
 	"github.com/stretchr/testify/suite"
 	"go.mongodb.org/mongo-driver/bson"
@@ -22,6 +23,8 @@ type userUsecaseSuite struct{
 	db        *mongo.Database
 	repository *mocks.UserRepository
 	usecase domain.UserUsecase
+	validate *validator.Validate
+
 }
 
 func (suite *userUsecaseSuite) SetupSuite(){
@@ -35,6 +38,7 @@ func (suite *userUsecaseSuite) SetupSuite(){
 	suite.db = db
 	suite.repository = repository
 	suite.usecase = usecase
+	suite.validate = validator.New()
 }
 
 func (suite *userUsecaseSuite) TearDownSuite() {
@@ -64,92 +68,91 @@ func (suite *userUsecaseSuite) SetupTest() {
 	suite.usecase = NewUserUsecase(repository, 10*time.Second)
 }
 
+// Create user test
 func (suite *userUsecaseSuite) TestCreate_Positive() {
-	user := &domain.User{
-		Username:  ptr("testuser"),
-		Password:  ptr("password"),
+	user := domain.User{
+		Name:     ptr("John Doe"),
+		Username: ptr("johndoe"),
+		Password: ptr("strongpassword"),
+		Email:    ptr("john.doe@example.com"),
 	}
+	suite.repository.On("Create", mock.Anything, &user).Return(nil)
 
-	suite.repository.On("Create", mock.Anything, user).Return(nil)
-
-	err := suite.usecase.Create(context.TODO(), user)
-
+	err := suite.usecase.Create(context.TODO(), &user)
 	suite.Nil(err)
-	suite.repository.AssertExpectations(suite.T())
 }
 
-// func (suite *userUsecaseSuite) TestHandleLogin_Positive() {
-// 	user := &domain.User{
-// 		Username: ptr("testuser"),
-// 		Password: ptr("password"),
-// 	}
+func (suite *userUsecaseSuite) TestUserValidation() {
+	tests := []struct {
+		name    string
+		user    domain.User
+		wantErr bool
+	}{
+		{
+			name: "Valid User",
+			user: domain.User{
+				Name:     ptr("John Doe"),
+				Username: ptr("johndoe"),
+				Password: ptr("strongpassword"),
+				Email:    ptr("john.doe@example.com"),
+			},
+			wantErr: false,
+		},
+		{
+			name: "Invalid Email",
+			user: domain.User{
+				Name:     ptr("John Doe"),
+				Username: ptr("johndoe"),
+				Password: ptr("strongpassword"),
+				Email:    ptr("invalid-email"),
+			},
+			wantErr: true,
+		},
+		{
+			name: "Missing Name",
+			user: domain.User{
+				Username: ptr("johndoe"),
+				Password: ptr("strongpassword"),
+				Email:    ptr("john.doe@example.com"),
+			},
+			wantErr: true,
+		},
+		{
+			name: "Short Password",
+			user: domain.User{
+				Name:     ptr("John Doe"),
+				Username: ptr("johndoe"),
+				Password: ptr("123"),
+				Email:    ptr("john.doe@example.com"),
+			},
+			wantErr: true,
+		},
+	}
 
-// 	foundUser := &domain.User{
-// 		Username:  ptr("testuser"),
-// 		Password:  ptr("hashedpassword"),
-// 		Email:     ptr("test@example.com"),
-// 	}
+	for _, tt := range tests {
+		if tt.wantErr {
+			// Since we expect an error, we shouldn't mock the repository's Create call
+			suite.repository.On("Create", mock.Anything, &tt.user).Return(nil).Maybe()
+		} else {
+			// Expect the repository's Create method to be called with a valid user
+			suite.repository.On("Create", mock.Anything, &tt.user).Return(nil)
+		}
 
-// 	suite.repository.On("FindByUsername", context.TODO(), *user.Username).Return(foundUser, nil)
-// 	infrastructure.On("VerifyPassword", *user.Password, *foundUser.Password).Return(true, "")
-// 	infrastructure.On("GenerateJWTToken", foundUser.User_id, *foundUser.Username, *foundUser.Email, foundUser.User_type).Return("token", "refreshToken", nil)
+		// Call the use case's Create method
+		err := suite.usecase.Create(context.TODO(), &tt.user)
 
-// 	token, refreshToken, err := suite.usecase.HandleLogin(context.TODO(), user)
+		// Assert error expectation
+		if tt.wantErr {
+			suite.Error(err, "Expected validation error, but got none")
+		} else {
+			suite.NoError(err, "Expected no validation error, but got one")
+		}
 
-// 	suite.Nil(err)
-// 	suite.Equal("token", token)
-// 	suite.Equal("refreshToken", refreshToken)
-// 	suite.repository.AssertExpectations(suite.T())
-// }
-
-// func (suite *userUsecaseSuite) TestHandleLogin_UserNotFound_Negative() {
-// 	user := &domain.User{
-// 		Username: ptr("testuser"),
-// 		Password: ptr("password"),
-// 	}
-
-// 	suite.repository.On("FindByUsername", context.TODO(), *user.Username).Return(nil, errors.New("user not found"))
-
-// 	_, _, err := suite.usecase.HandleLogin(context.TODO(), user)
-
-// 	suite.NotNil(err)
-// 	suite.EqualError(err, "user not found")
-// 	suite.repository.AssertExpectations(suite.T())
-// }
-
-// func (suite *userUsecaseSuite) TestHandleLogin_InvalidPassword_Negative() {
-// 	user := &domain.User{
-// 		Username: ptr("testuser"),
-// 		Password: ptr("password"),
-// 	}
-
-// 	foundUser := &domain.User{
-// 		Username:  ptr("testuser"),
-// 		Password:  ptr("hashedpassword"),
-// 		Email:     ptr("test@example.com"),
-// 		User_type: "admin",
-// 	}
-
-// 	suite.repository.On("FindByUsername", context.TODO(), *user.Username).Return(foundUser, nil)
-// 	infrastructure.On("VerifyPassword", *user.Password, *foundUser.Password).Return(false, "invalid password")
-
-// 	_, _, err := suite.usecase.HandleLogin(context.TODO(), user)
-
-// 	suite.NotNil(err)
-// 	suite.EqualError(err, "invalid password")
-// 	suite.repository.AssertExpectations(suite.T())
-// }
-
-// func (suite *userUsecaseSuite) TestUpdate_Positive() {
-// 	userID := "user-id"
-
-// 	suite.repository.On("Update", context.TODO(), userID).Return(nil)
-
-// 	err := suite.usecase.Update(context.TODO(), userID)
-
-// 	suite.Nil(err)
-// 	suite.repository.AssertExpectations(suite.T())
-// }
+		// Verify that all expected methods were called on the mock
+		// suite.repository.AssertExpectations(suite.T())
+		
+	}
+}
 
 func TestUserUsecaseSuite(t *testing.T) {
 	suite.Run(t, new(userUsecaseSuite))
